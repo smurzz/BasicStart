@@ -1,0 +1,25 @@
+
+// autentication by JSON-Body
+GET http://localhost:8080/authenticate
+Content-Type: application/json
+
+{
+    "userID": "admin",
+    "password": "123"
+}
+
+// autentication by Basic64
+###
+# @name loginAdminCorrect
+GET http://localhost:8080/authenticate
+Authorization: Basic YWRtaW46MTIz
+
+// error-authentication
+###
+GET http://localhost:8080/authenticate
+Authorization: Basic admin:1234
+
+@adminToken = {{loginAdminCorrect.response.headers.Authorization}}
+
+### Auflisten aller Nutzer ohne Token
+http://localhost:8080/users

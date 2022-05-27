@@ -1,0 +1,60 @@
+http://localhost:8080/user
+
+###
+GET http://localhost:8080/user/admin
+
+###
+POST http://localhost:8080/user
+Content-Type: application/json
+
+{
+    "userID": "67",
+    "userName": "Manfred",
+    "password": "123",
+    "isAdministrator": false
+}
+
+###
+POST http://localhost:8080/user
+Content-Type: application/json
+
+{
+    "userID": "57676879",
+    "userName": "jager",
+    "password": "345",
+    "isAdministrator": false
+}
+
+// Lege zweiten User an. Prüfe UserID und UserName, ob die Angaben korrekt sind.
+###
+POST http://localhost:8080/user
+Content-Type: application/json
+
+{
+    "userID": "manfred",
+    "userName": "Manfred Mustermann",
+    "password": "asdf"
+}
+
+###
+POST http://localhost:8080/user
+Content-Type: application/json
+
+{
+    "userID": "admin",
+    "userName": "Default Administrator Account",
+    "password": "123"
+}
+
+// find user by id in db
+###
+PUT http://localhost:8080/user/admin
+Content-Type: application/json
+
+{
+    "isAdministrator": true
+}
+
+// Lösche den User mit der User-ID manfred
+###
+DELETE http://localhost:8080/user/admin

@@ -1,0 +1,275 @@
+// Re-test Meilenstein 1, es sollte der Standard-Admin in der Datenbank sein
+###
+http://localhost:8080/user
+
+// Login mit Basic Authentication als admin mit korrekten Credentials admin:123
+###
+# @name loginAdminCorrect
+GET http://localhost:8080/authenticate
+Authorization: Basic YWRtaW46MTIz
+
+// Login mit Basic Authentication als admin mit falschen Credentials
+###
+GET http://localhost:8080/authenticate
+Authorization: Basic admin:1234
+
+@adminToken = {{loginAdminCorrect.response.headers.Authorization}}
+
+### Auflisten aller Nutzer ohne Token
+http://localhost:8080/user
+
+### Auflisten aller Nutzer mit Token von admin
+http://localhost:8080/user
+Authorization: {{adminToken}}
+
+### Auflisten aller Nutzer mit Token von admin
+http://localhost:8080/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiJhZG1pbiIsInVzZXJOYW1lIjoiRGVmYXVsdCBBZG1pbmlzdHJhdG9yIEFjY291bnQiLCJpc0FkbWluaXN0cmF0b3IiOnRydWUsImlhdCI6MTY1MjIyNjc2NywiZXhwIjoxNjUzODc5Mjk0MjAwfQ.5gAgYK5JqjkZEhU7edxGX1PDjRgV1a2eXvSoqOyl9BP
+
+### Löschen einen User von manfred
+DELETE http://localhost:8080/user/manfred
+Authorization: {{adminToken}}
+
+### Lege neuen user manfred an
+POST http://localhost:8080/user
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "userID": "manfred",
+    "userName": "Manfred Mustermann",
+    "password": "asdf"
+}
+
+### Änderen user manfred
+PUT http://localhost:8080/user/manfred
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "userName": "Manfred Müller"
+}
+
+### Abrufen des angelegten Users mit dem Admin-Token
+GET http://localhost:8080/user?ownerID=manfred&isAdministrator=false
+Authorization: {{adminToken}}
+
+### Abrufen des angelegten Users mit dem Admin-Token
+GET http://localhost:8080/user/manfred
+Authorization: {{adminToken}}
+
+// Login mit Basic Authentication als manfred mit korrekten Credentials admin:123
+###
+# @name loginManfredCorrect
+GET http://localhost:8080/authenticate
+Authorization: Basic manfred:asdf
+
+@manfredToken = {{loginManfredCorrect.response.headers.Authorization}}
+
+### Auflisten aller Nutzer mit Token von manfred
+GET http://localhost:8080/user
+Authorization: {{manfredToken}}
+
+### Auflisten aller Foren ohne Token
+GET http://localhost:8080/forumThreads
+
+// Lege ein ersten Forum an, der Administrator ist owner
+###
+# @name createForumRequest
+POST http://localhost:8080/forumThreads
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Mein erstes Forum",
+    "description": "Das ist ein erstes Forum, das ich im Rahmen der Tests angelegt habe"
+}
+
+// Lege ein ersten Forum an, der Ersteller benutzt fremde ID (Fehler)
+###
+# @name createForumRequest2
+POST http://localhost:8080/forumThreads
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Mein erstes Forum",
+    "description": "Das ist ein erstes Forum, das ich im Rahmen der Tests angelegt habe",
+    "ownerID": "manfred"
+}
+
+###
+@forumThreadID = {{createForumRequest.response.body._id}}
+
+### Auflisten aller Foren ohne Token, nun sollte es ein Forum geben
+http://localhost:8080/forumThreads
+
+### Abrufen von dem angelegten Forum-Thread
+http://localhost:8080/forumThreads/{{forumThreadID}}
+
+// Lege ein zweites Forum an
+###
+# @name createForumRequest2
+POST http://localhost:8080/forumThreads
+Authorization: {{manfredToken}}
+Content-Type: application/json
+
+{
+    "name": "Forum von Manfred",
+    "description": "Forum forum forum ...",
+    "ownerID": "manfred"
+}
+
+// Lege ein drittes Forum an
+###
+# @name createForumRequest3
+POST http://localhost:8080/forumThreads
+Authorization: {{manfredToken}}
+Content-Type: application/json
+
+{
+    "name": "Forum No2 von Manfred",
+    "description": "Forum forum forum forum forum ...",
+    "ownerID": "manfred"
+}
+
+// Ändere ein Forum
+###
+PUT http://localhost:8080/forumThreads/{{forumThreadID}}
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Thema",
+    "description": "Forum forum FORUM ..."
+}
+
+### Auflisten der Foren des aktuellen users
+GET http://localhost:8080/forumThreads/myForumThreads
+Authorization: {{adminToken}}
+
+### Auflisten der Foren einen bestimmten user
+GET http://localhost:8080/forumThreads?ownerID=manfred
+
+### Auflisten der Foren einen bestimmten user
+GET http://localhost:8080/forumThreads?ownerID=admin&name=Thema
+
+### Auflisten der Foren einen bestimmten user
+GET http://localhost:8080/forumThreads/{{forumThreadID}}
+
+### Lösche den angelegten Forum-Thread
+DELETE http://localhost:8080/forumThreads/{{forumThreadID}}
+Authorization: {{adminToken}}
+
+### Lösche den User manfred
+DELETE http://localhost:8080/user/manfred
+Authorization: {{adminToken}}
+
+### Forumnachrichten für einen bestimmten Forum-Thread abrufen
+GET http://localhost:8080/forumThreads/{{forumThreadID}}/forumMessages
+
+### Auflisten aller Forumnachrichten ohne Token
+http://localhost:8080/forumMessages
+
+###
+# @name createForumMessageRequest
+POST http://localhost:8080/forumMessages
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "forumThreadID": "{{forumThreadID}}",
+    "title": "Meine erste Forumnachricht",
+    "text": "Das wollte ich nur kurz in das Forum schreiben."
+}
+
+###
+@forumMessageID = {{createForumMessageRequest.response.body._id}}
+
+###
+// Anlegen mit falscher Forum ID
+POST http://localhost:8080/forumMessages
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "forumThreadID": "Gibt es nicht",
+    "title": "Meine erste Forumnachricht",
+    "text": "Das wollte ich nur kurz in das Forum schreiben."
+}
+
+### Auflisten aller Forumnachrichten für Forum über Suchparameter
+GET http://localhost:8080/forumMessages?forumThreadID={{forumThreadID}}
+
+### Auflisten aller Forumnachrichten für Forum über nachgelagerte Suche
+GET http://localhost:8080/forumThreads/{{forumThreadID}}/forumMessages
+
+### Auflisten aller Forumnachrichten für nicht existiertem Forum
+GET http://localhost:8080/forumThreads/628af2975658a4362e16cb70/forumMessages
+
+###
+// Ändern die Nachricht
+PUT http://localhost:8080/forumMessages/{{forumMessageID}}
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "title": "Meine erste Forumnachricht",
+    "text": "Der Text wurde bearbeitet"
+}
+
+###
+// Ändern die Nachricht, die nicht existiert
+PUT http://localhost:8080/forumMessages/628c407ceeab5a6025bf4e90
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "forumThreadID": "{{forumThreadID}}",
+    "title": "Meine erste Forumnachricht",
+    "text": "Der Text wurde bearbeitet"
+}
+
+###
+// Ändern die Nachricht mit falschem Token
+PUT http://localhost:8080/forumMessages/{{forumMessageID}}
+Authorization: {{manfredToken}}
+Content-Type: application/json
+
+{
+    "forumThreadID": "{{forumThreadID}}",
+    "title": "Meine erste Forumnachricht",
+    "text": "Der Text wurde bearbeitet 2"
+}
+
+###
+// Ändern die Nachricht mit falscher ForumID
+PUT http://localhost:8080/forumMessages/{{forumMessageID}}
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+    "forumThreadID": "Gibt es Keine",
+    "title": "Meine erste Forumnachricht",
+    "text": "Der Text wurde bearbeitet"
+}
+
+### Löschen einer Forumnachrichten
+DELETE  http://localhost:8080/forumMessages/{{forumMessageID}}
+Authorization: {{adminToken}}
+
+### Löschen einer Forumnachrichten, die nicht existiert
+DELETE  http://localhost:8080/forumMessages/628c57828146d7896d267309
+Authorization: {{adminToken}}
+
+### Löschen einer Forumnachrichten mit falschem Token
+DELETE  http://localhost:8080/forumMessages/{{forumMessageID}}
+Authorization: {{manfredToken}}
+
+### Lösche Forum-Thread
+DELETE  http://localhost:8080/forumThreads/{{forumThreadID}}
+Authorization: {{adminToken}}
+
+### Lösche manfred-User
+DELETE  http://localhost:8080/user/manfred
+Authorization: {{adminToken}}

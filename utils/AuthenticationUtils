@@ -1,0 +1,82 @@
+var logger = require('../config/winston');
+var config = require("config");
+var jwt = require('jsonwebtoken');
+
+const { JsonWebTokenError } = require('jsonwebtoken');
+
+var forumService = require("../endpoints/ForumThread/ForumThreadService");
+var messageService = require("../endpoints/ForumMessage/ForumMessageService");
+
+
+// Verify token
+function authenticateToken(req, res, next) {
+    console.debug("Authentifizierung von Token hat begonnen..");
+
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+    if (token == null) {
+        console.error("Authentication Token ist nicht gefunden.");
+        return res.status(401).json({ "Fehler": "Authentication Token ist nicht gefunden." });
+    } else {
+        var privateKey = config.get('session.tokenKey');
+        var payload;
+        try {
+            payload = jwt.verify(token, privateKey);
+            const user = payload;
+            req.user = user;
+            next();
+        } catch (err) {
+            if (err instanceof JsonWebTokenError) {
+                console.error(err + ` Token: ${authHeader}, also ${token}`);
+                return res.status(401).json({ "Error": "JsonWebTokenError: " + err.message });
+            }
+            console.error("Fehler bei der Verifizierung.");
+            return res.status(400).json({ "Fehler": "Verifizierung ist gescheitert." });
+        }
+    }
+}
+
+// Token for Forum authenticated
+function tokenForumAuth ( req, res, next ){
+    var { _id } = req.params;
+    var ownerID = req.user.userID;
+
+    forumService.findForumByID(_id, function (err, forum) {
+        if (forum) {
+            if (forum.ownerID === ownerID) {
+                next();
+            } else {
+                console.error("Keine Rechte für Aktualisierung des Forums.");
+                return res.status(401).json({"Fehler" : "Keine Rechte für Aktualisierung des Forums."});
+            }
+        } else {
+            console.error(err);
+            return res.status(404).json({ "Fehler": err });
+        }
+    });
+}
+
+// Token for message authenticated
+function tokenMessageAuth ( req, res, next ){
+    var { _id } = req.params;
+    var ownerID = req.user.userID;
+
+    messageService.findMessageByID( _id , function (err, message) {
+        if (message) {
+            if (message.authorID === ownerID) {
+                next();
+            } else {
+                console.error("Keine Rechte für Aktualisierung der Nachricht.");
+                return res.status(401).json({"Fehler" : "Keine Rechte für Aktualisierung der Nachricht."});
+            }
+        } else {
+            return res.status(404).json({ "Fehler": err });
+        }
+    });
+}
+
+module.exports = {
+    authenticateToken,
+    tokenForumAuth,
+    tokenMessageAuth
+};

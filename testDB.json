@@ -1,0 +1,41 @@
+[
+    {
+        "isAdminstrator": false,
+        "_id": "5ede4ab1d0b48233a4ae4a87",
+        "id": 3,
+        "userID": "234",
+        "userName": "Blume",
+        "password": "blabla",
+        "_v": 0
+    },
+    {
+        "isAdminstrator": false,
+        "_id": "5ede569561ee913e040953d6",
+        "id": 5,
+        "userID": "1234",
+        "userName": "Blume2",
+        "password": "blabla",
+        "_v": 0
+    },
+    {
+        "isAdminstrator": true,
+        "_id": "5edf6f227e27da0810ec1455",
+        "id": 1,
+        "userID": "tati",
+        "userName": "Jana",
+        "password": "$2b$10$KqWgyWX1X19cM7LlnQvnNuNrgy/sndv/t9bRWitXDMbL/vYD580/e",
+        "createAt": "2020-06-09T11:14:42.132Z",
+        "updateAt": "2020-06-09T11:14:42.132Z",
+        "_v": 0
+    },
+    {
+        "isAdminstrator": true,
+        "_id": "5fbe27f94afd312904b2f021",
+        "userID": "admin",
+        "password": "$2b$10$OlCtvE4urJyk.Z1C9Wc09.TIYw315wGou6LWbbht78JjcV5aQrc3",
+        "userName": "Default Administrator Account",
+        "createAt": "2020-11-25T09:46:33.874Z",
+        "updateAt": "2020-11-25T09:46:33.874Z",
+        "_v": 0
+    }
+]
