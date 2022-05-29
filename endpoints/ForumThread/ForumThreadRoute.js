@@ -10,10 +10,7 @@ var forumService = require("../ForumThread/ForumThreadService");
 var authenticationUtils = require("../../utils/AuthenticationUtils");
 
 router.get('/', function (req, res, next) {
-    // const result = "ok"
-    // console.log("In Forums route.");
-    // console.log("Result " + result);
-    // res.send(result);
+    console.log("In Forums route.");
     forumService.findForums(req.query, function (err, result) {
         if (err) {
             res.status(404).json({ "Error": err });
