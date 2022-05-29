@@ -2,29 +2,27 @@ let User = require('../endpoints/user/UserModel');
 
 let chai = require("chai");
 let chaiHttp = require("chai-http");
-
-let serverUser = require("../endpoints/user/UserRoute");
-let serverForum = require("../endpoints/ForumThread/ForumThreadRoute");
-let serverAuth = require("../endpoints/authentication/AuthenticationRoute");
+let server = require('../httpServer');
+chai.should();
+let expect = chai.expect;
+// let serverUser = require("../endpoints/user/UserRoute");
+// let serverForum = require("../endpoints/ForumThread/ForumThreadRoute");
+// let serverAuth = require("../endpoints/authentication/AuthenticationRoute");
 
 var sessionAuthService = require('../endpoints/authentication/AuthenticationService');
 var sessionUserService = require('../endpoints/user/UserService');
 
-
-// Assertion Style
-chai.should();
-
 chai.use(chaiHttp);
 
-describe('ForumThreads', () =>{
-    var admin = new User ({"userID": "admin", "password": "123", "isAdministator": true});
+describe('ForumThreads', () => {
+    var admin = new User({"userID": "admin", "password": "123", "isAdministator": true});
     var tokenAdmin;
 
     before(function(done) {
         sessionAuthService.createSessionToken(admin, function(err, token, user){
-            token.should.to.be.a('string');
+            expect(token).should.to.be.not.null;
             tokenAdmin = token;
-            user.should.to.be.an('object');
+            expect(user).should.to.be.not.null;
             if(user){
                 user.userID.should.to.equal('admin');
             }
@@ -33,22 +31,22 @@ describe('ForumThreads', () =>{
     })
 
     /* Test the GET route */
-    it("It should GET all the forums", function(done){
+    it("It should GET all the forums", function (done) {
 
-        chai.request(serverForum)
-                .get("/")
-                .end((err, response) =>{
-                    response.should.have.status(200);
-                    response.body.should.be.a('array');
-                    // response.body.length.should.be.eq(1);
+        chai.request(server)
+            .get("/forumThreads")
+            .end((err, response) => {
+                response.should.have.status(200);
+                response.body.should.be.a('array');
+                response.body.should.be.eql([]);
                 done();
-                })
-    })
+            });
+    });
 
     /* Test the GET (by ID) route */
-    
+
     /* Test the POST route */
-    
+
     /* Test the PUT route */
 
     /* Test the DELETE route */
@@ -88,9 +86,9 @@ describe('ForumThreads', () =>{
 //     })
 
 //     /* Test the GET (by ID) route */
-    
+
 //     /* Test the POST route */
-    
+
 //     /* Test the PUT route */
 
 //     /* Test the DELETE route */
